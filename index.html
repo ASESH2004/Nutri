@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriForge AI - Premium Label & Branding Studio</title>
+    
+    <!-- Third-Party Library Integrations -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.3/dist/tesseract.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#6366f1',
+                        secondary: '#ec4899',
+                        dark: '#090d16',
+                        card: 'rgba(17, 25, 40, 0.65)',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark text-white antialiased min-h-screen overflow-x-hidden relative">
+
+    <!-- Floating Particles/Ambient Backgrounds -->
+    <div id="particleContainer" class="fixed inset-0 z-0 pointer-events-none overflow-hidden select-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[130px] mix-blend-screen"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-secondary/10 blur-[130px] mix-blend-screen"></div>
+        <div class="absolute top-[30%] left-[50%] translate-x-[-50%] w-[60%] h-[20%] rounded-full bg-indigo-500/5 blur-[120px] mix-blend-screen"></div>
+    </div>
+
+    <!-- Floating Toast Notification System Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Navigation Header -->
+    <nav class="relative z-50 w-full border-b border-white/5 backdrop-blur-md bg-dark/60 sticky top-0">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-xl font-bold shadow-lg shadow-primary/20">
+                    <i class="ri-sparkling-fill"></i>
+                </div>
+                <div>
+                    <span class="font-display font-bold text-xl tracking-tight leading-none block">NutriForge<span class="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">AI</span></span>
+                    <span class="text-[10px] text-gray-500 font-medium tracking-widest uppercase mt-0.5 block">Label & Branding Studio</span>
+                </div>
+            </div>
+            
+            <!-- Connection & Cloud status badge -->
+            <div class="flex items-center gap-4">
+                <button onclick="toggleFirebaseConfigModal()" class="px-3.5 py-1.5 rounded-full border border-white/10 bg-white/5 text-xs font-semibold hover:bg-white/10 hover:border-white/20 transition-all flex items-center gap-2">
+                    <span id="cloudStatusIndicator" class="w-2.5 h-2.5 rounded-full bg-yellow-500"></span>
+                    <span id="cloudStatusText">Mock Database (Local)</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Workspace Frame -->
+    <main class="relative z-10 max-w-7xl mx-auto px-6 pt-8 pb-20">
+        
+        <!-- Premium Visual Tab Bar (Apple Style) -->
+        <div class="flex flex-wrap items-center justify-center bg-white/5 border border-white/10 p-1.5 rounded-2xl max-w-3xl mx-auto mb-10 gap-1 backdrop-blur-md">
+            <button onclick="switchTab('tab-builder')" id="btn-tab-builder" class="tab-btn active flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:text-white bg-white/10 text-white shadow-sm">
+                <i class="ri-equalizer-line"></i> AI Label Builder
+            </button>
+            <button onclick="switchTab('tab-generator')" id="btn-tab-generator" class="tab-btn flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:text-white text-gray-400">
+                <i class="ri-image-add-line"></i> AI Background Studio
+            </button>
+            <button onclick="switchTab('tab-ingredient')" id="btn-tab-ingredient" class="tab-btn flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:text-white text-gray-400">
+                <i class="ri-heart-pulse-line"></i> Ingredient Scan Hub
+            </button>
+            <button onclick="switchTab('tab-history')" id="btn-tab-history" class="tab-btn flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all hover:text-white text-gray-400">
+                <i class="ri-database-2-line"></i> Saved History
+            </button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 1: NUTRITION FACT BUILDER & OCR SCANNER -->
+        <!-- ============================================== -->
+        <div id="tab-builder" class="tab-content active space-y-8">
+            
+            <!-- Quick AI Assistant Action Bar -->
+            <div class="glass-panel p-6 rounded-3xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <h2 class="text-xl font-display font-semibold flex items-center gap-2">
+                        <i class="ri-magic-line text-primary"></i> Rapid AI Label Extraction
+                    </h2>
+                    <p class="text-xs text-gray-400">Instantly generate structured FDA labels from any nutrition summary, packaging text, or OCR snippet.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="openOcrScannerModal()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-primary to-secondary text-white text-xs font-bold hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all flex items-center gap-2 border border-white/10 hover:scale-105 active:scale-95">
+                        <i class="ri-scan-line"></i> Scan Label Photo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Interactive Builder Split Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Left Panel: Controls & Inputs -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="glass-panel p-6 rounded-3xl relative overflow-hidden">
+                        
+                        <div class="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
+                            <h2 class="text-lg font-display font-semibold flex items-center gap-2">
+                                <i class="ri-equalizer-line text-primary"></i> Product & General Info
+                            </h2>
+                            <div class="flex gap-2">
+                                <button onclick="resetLabelFields()" class="px-3 py-1.5 rounded-lg text-[10px] font-bold bg-white/5 hover:bg-white/10 border border-white/10 transition-colors uppercase tracking-wider flex items-center gap-1">
+                                    <i class="ri-eraser-line"></i> Reset Form
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Brand & Layout Presets -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                            <div class="space-y-1">
+                                <label class="text-xs text-gray-400 font-medium ml-1">Product Title</label>
+                                <input type="text" id="productName" value="Protein Power Bar" placeholder="e.g. Oatmeal Cookies" class="w-full bg-dark/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-xs text-gray-400 font-medium ml-1">Label Design Layout</label>
+                                <select id="labelStandard" class="w-full bg-dark/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all appearance-none cursor-pointer">
+                                    <option value="vertical">FDA Standard (Vertical)</option>
+                                    <option value="simplified">Simplified Layout (Small packs)</option>
+                                    <option value="tabular">FDA Tabular Layout (Horizontal)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- General Sizing Info -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                            <div class="space-y-1">
+                                <div class="flex justify-between items-center px-1">
+                                    <label class="text-xs text-gray-400 font-medium">Serving Size Field</label>
+                                </div>
+                                <input type="text" id="servingSize" value="1 bar (45g)" placeholder="e.g. 1 cup (240ml)" class="w-full bg-dark/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                            </div>
+                            <div class="space-y-1">
+                                <div class="flex justify-between items-center px-1">
+                                    <label class="text-xs text-gray-400 font-medium">Servings Per Container</label>
+                                </div>
+                                <input type="text" id="servingsPerContainer" value="1" placeholder="e.g. About 8" class="w-full bg-dark/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all">
+                            </div>
+                        </div>
+
+                        <!-- Primary Macro/Nutrient inputs -->
+                        <div class="space-y-4 pt-4 border-t border-white/5">
+                            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3 flex justify-between items-center">
+                                Primary Nutrients
+                                <span class="text-[10px] font-normal text-gray-500 bg-dark/40 px-2 py-0.5 rounded-md">Amount per serving</span>
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="sm:col-span-2 space-y-1 mb-2">
+                                    <label class="text-xs text-gray-300 font-semibold ml-1">Calories (kcal)</label>
+                                    <input type="number" id="calories" value="190" class="w-full bg-dark/50 border border-white/10 rounded-xl px-4 py-3.5 text-xl font-bold focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all text-white">
+                                </div>
+                                
+                                <div class="input-group">
+                                    <label>Total Fat (g)</label>
+                                    <input type="number" id="totalFat" value="8" step="0.1">
+                                </div>
+                                <div class="input-group">
+                                    <label>Saturated Fat (g)</label>
+                                    <input type="number" id="satFat" value="2.5" step="0.1">
+                                </div>
+                                <div class="input-group">
+                                    <label>Trans Fat (g)</label>
+                                    <input type="number" id="transFat" value="0" step="0.1">
+                                </div>
+                                <div class="input-group">
+                                    <label>Cholesterol (mg)</label>
+                                    <input type="number" id="cholesterol" value="0">
+                                </div>
+                                <div class="input-group">
+                                    <label>Sodium (mg)</label>
+                                    <input type="number" id="sodium" value="140">
+                                </div>
+                                <div class="input-group">
+                                    <label>Total Carbohydrate (g)</label>
+                                    <input type="number" id="totalCarbs" value="22">
+                                </div>
+                                <div class="input-group">
+                                    <label>Dietary Fiber (g)</label>
+                                    <input type="number" id="fiber" value="4">
+                                </div>
+                                <div class="input-group">
+                                    <label>Total Sugars (g)</label>
+                                    <input type="number" id="sugars" value="12">
+                                </div>
+                                <div class="input-group">
+                                    <label>Added Sugars (g)</label>
+                                    <input type="number" id="addedSugars" value="10">
+                                </div>
+                                <div class="input-group">
+                                    <label>Protein (g)</label>
+                                    <input type="number" id="protein" value="10">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Micro Nutrients (Vitamins & Minerals) -->
+                        <div class="space-y-4 pt-6 mt-6 border-t border-white/5">
+                            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Vitamins & Minerals</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="input-group">
+                                    <label>Vitamin D (mcg)</label>
+                                    <input type="number" id="vitaminD" value="0" step="0.1">
+                                </div>
+                                <div class="input-group">
+                                    <label>Calcium (mg)</label>
+                                    <input type="number" id="calcium" value="0">
+                                </div>
+                                <div class="input-group">
+                                    <label>Iron (mg)</label>
+                                    <input type="number" id="iron" value="0" step="0.1">
+                                </div>
+                                <div class="input-group">
+                                    <label>Potassium (mg)</label>
+                                    <input type="number" id="potassium" value="0">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Right Panel: Live Fact Preview -->
+                <div class="lg:col-span-5 lg:sticky lg:top-24 space-y-6">
+                    <div class="glass-panel p-6 rounded-3xl flex flex-col items-center">
+                        <div class="w-full flex justify-between items-center mb-6">
+                            <h2 class="text-lg font-display font-semibold flex items-center gap-2">
+                                <i class="ri-eye-line text-secondary"></i> Live Engine View
+                            </h2>
+                            
+                            <!-- Export Actions Menu -->
+                            <div class="flex gap-1.5">
+                                <button onclick="downloadLabelImage('png')" class="px-3 py-1.5 rounded-xl bg-white text-dark text-xs font-bold hover:bg-gray-200 transition-all flex items-center gap-1 shadow-md shadow-white/10" title="Download High-Res PNG">
+                                    <i class="ri-image-line"></i> PNG
+                                </button>
+                                <button onclick="downloadLabelImage('svg')" class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-semibold hover:bg-white/10 transition-all flex items-center gap-1" title="Download Raw Vector SVG">
+                                    <i class="ri-code-s-slash-line"></i> SVG
+                                </button>
+                                <button onclick="window.print()" class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-semibold hover:bg-white/10 transition-all flex items-center gap-1" title="Print to PDF">
+                                    <i class="ri-printer-line"></i> PDF
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- FDA Label Preview Container -->
+                        <div class="relative w-full flex justify-center bg-black/30 p-8 rounded-2xl border border-white/5 overflow-hidden">
+                            <div id="nutritionLabel" class="bg-white p-6 border-[3px] border-black text-black font-sans w-full max-w-[340px] label-container">
+                                
+                                <div class="tabular-header">
+                                    <h1 class="text-[34px] font-black leading-none m-0 p-0 tracking-tighter uppercase font-display border-none">Nutrition Facts</h1>
+                                    <div class="border-b-[8px] border-black my-1"></div>
+                                    <div class="text-[14px] leading-tight" id="lblServingsCount">1 serving per container</div>
+                                    <div class="flex justify-between items-end font-bold text-[15px] leading-tight mt-1 border-b-[5px] border-black pb-1">
+                                        <span>Serving size</span>
+                                        <span id="lblServingSizeText">1 bar (45g)</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-between items-end border-b-[8px] border-black pb-1 mb-1">
+                                    <div>
+                                        <div class="text-[11px] font-bold leading-tight">Amount per serving</div>
+                                        <div class="text-[32px] font-black leading-none tracking-tighter">Calories</div>
+                                    </div>
+                                    <div class="text-[40px] font-black leading-none tracking-tighter" id="lblCaloriesVal">190</div>
+                                </div>
+                                
+                                <div class="text-right text-[10px] font-bold border-b border-black pb-[2px] mb-[2px]">
+                                    % Daily Value*
+                                </div>
+                                
+                                <!-- Core Macro Rows -->
+                                <div class="text-[13px] leading-snug">
+                                    <div class="flex justify-between border-b border-black py-[1px]">
+                                        <div><span class="font-bold">Total Fat</span> <span id="lblTotalFatVal">8g</span></div>
+                                        <div class="font-bold" id="lblTotalFatDv">10%</div>
+                                    </div>
+                                    <div class="flex justify-between border-b border-black py-[1px] pl-4">
+                                        <div>Saturated Fat <span id="lblSatFatVal">2.5g</span></div>
+                                        <div class="font-bold" id="lblSatFatDv">13%</div>
+                                    </div>
+                                    <div class="flex justify-between border-b border-black py-[1px] pl-4 italic">
+                                        <div>Trans Fat <span id="lblTransFatVal">0g</span></div>
+                                        <div class="font-bold"></div>
+                                    </div>
+                                    <div class="flex justify-between border-b border-black py-[1px]">
+                                        <div><span class="font-bold">Cholesterol</span> <span id="lblCholVal">0mg</span></div>
+                                        <div class="font-bold" id="lblCholDv">0%</div>
+                                    </div>
+                                    <div class="flex justify-between border-b border-black py-[1px]">
+                                        <div><span class="font-bold">Sodium</span> <span id="lblSodVal">140mg</span></div>
+                                        <div class="font-bold" id="lblSodDv">6%</div>
+                                    </div>
+                                    <div class="flex justify-between border-b border-black py-[1px]">
+                                        <div><span class="font-bold">Total Carbohydrate</span> <span id="lblCarbsVal">22g</span></div>
+                                        <div class="font-bold" id="lblCarbsDv">8%</div>
+                                    </div>
+                                    <div class="flex justify-between border-b border-black py-[1px] pl-4">
+                                        <div>Dietary Fiber <span id="lblFiberVal">4g</span></div>
+                                        <div class="font-bold" id="lblFiberDv">14%</div>
+                                    </div>
+                                    <div class="flex justify-between border-b border-black py-[1px] pl-4">
+                                        <div>Total Sugars <span id="lblSugarsVal">12g</span></div>
+                                        <div class="font-bold"></div>
+                                    </div>
+                                    <div class="flex justify-between border-b border-black py-[1px] pl-8">
+                                        <div>Includes <span id="lblAddedSugarsVal">10g</span> Added Sugars</div>
+                                        <div class="font-bold" id="lblAddedSugarsDv">20%</div>
+                                    </div>
+                                    <div class="flex justify-between border-b-[8px] border-black py-[1px]">
+                                        <div><span class="font-bold">Protein</span> <span id="lblProteinVal">10g</span></div>
+                                        <div class="font-bold"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Minerals and Vitamins -->
+                                <div class="text-[13px] leading-snug micro-nutrients">
+                                    <div class="flex justify-between border-b border-gray-400 py-[2px]">
+                                        <div>Vitamin D <span id="lblVitDVal">0mcg</span></div>
+                                        <div id="lblVitDDv">0%</div>
+                                    </div>
+                                    <div class="flex justify-between border-b border-gray-400 py-[2px]">
+                                        <div>Calcium <span id="lblCalcVal">0mg</span></div>
+                                        <div id="lblCalcDv">0%</div>
+                                    </div>
+                                    <div class="flex justify-between border-b border-gray-400 py-[2px]">
+                                        <div>Iron <span id="lblIronVal">0mg</span></div>
+                                        <div id="lblIronDv">0%</div>
+                                    </div>
+                                    <div class="flex justify-between border-b border-gray-400 py-[2px]">
+                                        <div>Potassium <span id="lblPotVal">0mg</span></div>
+                                        <div id="lblPotDv">0%</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="text-[9px] leading-tight text-black mt-2 pt-1 border-t border-black dv-footnote">
+                                    * The % Daily Value (DV) tells you how much a nutrient in a serving of food contributes to a daily diet. 2,000 calories a day is used for general nutrition advice.
+                                </div>
+                                
+                            </div>
+                        </div>
+
+                        <!-- Save label to cloud action -->
+                        <button onclick="saveLabelToDatabase()" class="mt-6 w-full py-3.5 rounded-2xl bg-gradient-to-r from-primary to-secondary text-white font-bold hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] transition-all flex items-center justify-center gap-2">
+                            <i class="ri-cloud-line text-lg"></i> Save Project to Studio Cloud
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 2: AI PRODUCT BACKGROUND GENERATOR -->
+        <!-- ============================================== -->
+        <div id="tab-generator" class="tab-content space-y-8">
+            <!-- Studio Ambient and Floating Atmosphere info -->
+            <div class="glass-panel p-6 rounded-3xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <h2 class="text-xl font-display font-semibold flex items-center gap-2">
+                        <i class="ri-image-add-line text-primary"></i> AI Premium Advertising Background Studio
+                    </h2>
+                    <p class="text-xs text-gray-400">Upload your product packaging image, automatically isolate it, and generate stunning luxury Amazon A+ commercial advertising environments.</p>
+                </div>
+            </div>
+
+            <!-- Upload screen: Drag-and-drop or click selector -->
+            <div id="luxuryUploadZone" class="glass-panel p-12 rounded-[2rem] border-2 border-dashed border-white/10 text-center hover:border-primary/50 cursor-pointer hover:bg-white/5 transition-all max-w-2xl mx-auto space-y-4">
+                <input type="file" id="luxuryPackageInput" accept="image/*" class="hidden">
+                <div class="space-y-4">
+                    <div class="w-20 h-20 mx-auto rounded-3xl bg-white/5 flex items-center justify-center animate-bounce">
+                        <i class="ri-image-add-line text-4xl text-primary"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-white text-lg">Upload Product Package</h4>
+                        <p class="text-xs text-gray-400 mt-1">PNG, JPG or WEBP (Transparencies supported natively)</p>
+                    </div>
+                    <button class="px-6 py-3 rounded-2xl bg-gradient-to-r from-primary to-secondary text-white font-semibold shadow-lg shadow-primary/20 hover:scale-105 transition-all">
+                        Generate Luxury Background
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active Studio Splitted Area (hidden initially, visible during generation) -->
+            <div id="luxuryControlDashboard" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start hidden">
+                
+                <!-- Left: Hardware-accelerated Before/After slider & visualizer -->
+                <div class="lg:col-span-6 space-y-6 lg:sticky lg:top-24">
+                    <div class="glass-panel p-6 rounded-3xl space-y-6 flex flex-col items-center">
+                        <div class="w-full flex justify-between items-center pb-3 border-b border-white/5">
+                            <h3 class="text-base font-display font-bold flex items-center gap-2">
+                                <i class="ri-eye-line text-secondary"></i> Brand Advertisement Visualizer
+                            </h3>
+                            <!-- Download / Export Button -->
+                            <button id="btnExportMockup" onclick="downloadLuxuryMockup()" class="hidden px-4 py-2 rounded-xl bg-white text-dark text-xs font-bold hover:bg-gray-200 transition-all flex items-center gap-1.5 shadow-md shadow-white/10">
+                                <i class="ri-download-2-line"></i> Export Premium Shot
+                            </button>
+                        </div>
+
+                        <!-- 60FPS split comparison slider -->
+                        <div id="comparisonSlider" class="ba-slider-container w-full relative">
+                            <!-- Before Image (Original Uploaded File) -->
+                            <div id="beforeImage" class="ba-image ba-before"></div>
+                            <!-- After Image (Fully Composited advertising shot) -->
+                            <div id="afterImage" class="ba-image ba-after"></div>
+                            <!-- Slittable Drag handle bar -->
+                            <div id="baHandle" class="ba-handle">
+                                <div class="ba-handle-button">
+                                    <i class="ri-arrow-left-right-line"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Manual Background prompt regenerator -->
+                        <button onclick="regenerateAIBackground()" class="w-full py-3.5 rounded-2xl border border-white/10 hover:border-primary/50 bg-white/5 hover:bg-white/10 text-white font-semibold transition-all flex items-center justify-center gap-2">
+                            <i class="ri-refresh-line"></i> Regenerate AI Scenery Base
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right: Extracted packaging swatches, and Figma-style layout modifiers -->
+                <div class="lg:col-span-6 space-y-6">
+                    
+                    <!-- Extracted Packaging swatches DNA -->
+                    <div id="aiAnalysisBox" class="glass-panel p-6 rounded-3xl space-y-4 hidden">
+                        <h3 class="text-sm font-semibold text-white uppercase tracking-widest flex items-center gap-2 pb-2 border-b border-white/5">
+                            <i class="ri-pulse-line text-primary"></i> Extracted Packaging DNA
+                        </h3>
+                        
+                        <div id="aiThemeResults" class="grid grid-cols-2 gap-4">
+                            <!-- Category and luxury details mapped automatically -->
+                        </div>
+
+                        <!-- Color pill swatches row -->
+                        <div class="space-y-3 pt-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-xs text-gray-400 font-medium">Dominant Packaging Accents</span>
+                                <span class="text-[10px] text-gray-500 font-semibold uppercase font-mono">Select to apply</span>
+                            </div>
+                            
+                            <div id="extractedPaletteRow" class="flex gap-2.5 flex-wrap">
+                                <!-- Palette pills rendered by JS -->
+                            </div>
+
+                            <!-- Interactive assigner popover -->
+                            <div id="paletteAssignerBox" class="hidden p-4 rounded-2xl bg-dark/50 border border-white/5 space-y-3 transition-all animate-fadeIn">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <div id="activeSelectedColorDot" class="w-3 h-3 rounded-full"></div>
+                                        <span id="activeSelectedHex" class="font-mono text-xs font-bold text-white">#FFFFFF</span>
+                                    </div>
+                                    <span class="text-[9px] text-gray-400 uppercase font-semibold">Apply accent to:</span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button onclick="applySelectedColorTo('tint')" class="py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-[10px] text-white font-bold transition-all">
+                                        Backdrop Tint
+                                    </button>
+                                    <button onclick="applySelectedColorTo('pedestal')" class="py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-[10px] text-white font-bold transition-all">
+                                        Podium Base
+                                    </button>
+                                    <button onclick="applySelectedColorTo('halo')" class="py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-[10px] text-white font-bold transition-all">
+                                        Halo Light
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Parameter editors panel -->
+                    <div class="glass-panel p-6 rounded-3xl space-y-6">
+                        <h3 class="text-sm font-semibold text-white uppercase tracking-widest flex items-center gap-2 pb-3 border-b border-white/5">
+                            <i class="ri-equalizer-line text-primary"></i> Studio Compositing Suite
+                        </h3>
+
+                        <!-- 1. Ambient preset selection -->
+                        <div class="space-y-2">
+                            <label class="text-xs text-gray-400 font-semibold block">Select Studio Scene theme</label>
+                            <select id="optPresetTheme" class="w-full bg-dark/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary appearance-none cursor-pointer">
+                                <option value="silk">Liquid Silk & Flowing Satin Drapes</option>
+                                <option value="marble" selected>Carrara White Marble Columns</option>
+                                <option value="botanical">Soft Organic Tropical Palm Shadows</option>
+                                <option value="obsidian">Moody Dark Obsidian Concrete</option>
+                                <option value="liquid">Pristine Hydrating Water Ripples</option>
+                                <option value="neon">Sleek Cyber-Futuristic Neon Arches</option>
+                            </select>
+                        </div>
+                        <!-- Packaging Auto-Key (Background Removal) controls -->
+                        <div class="space-y-4 pt-4 border-t border-white/5">
+                            <div class="flex items-center justify-between">
+                                <label class="text-xs text-gray-300 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                    <i class="ri-scissors-cut-line text-primary"></i> Isolate Package (Auto-Key)
+                                </label>
+                                <input type="checkbox" id="optAutoKeyEnabled" checked class="w-4 h-4 text-primary bg-dark border-white/10 rounded focus:ring-primary focus:ring-offset-dark focus:ring-2">
+                            </div>
+                            <div id="keyConfigRow" class="space-y-2">
+                                <div class="flex justify-between items-center text-[10px] text-gray-400 font-medium">
+                                    <span>Keying Color Tolerance (Threshold)</span>
+                                    <span id="valKeyThreshold" class="text-white font-bold font-mono">35</span>
+                                </div>
+                                <input type="range" id="optKeyThreshold" min="5" max="100" value="35">
+                                <span class="text-[10px] text-gray-500 block leading-normal">
+                                    Adjust tolerance if parts of your product packaging become transparent, or disable to preserve original pixels.
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- 2. Pedestal settings -->
+                        <div class="space-y-4 pt-4 border-t border-white/5">
+                            <div class="flex items-center justify-between">
+                                <label class="text-xs text-gray-300 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                    <i class="ri-hotel-line text-primary"></i> 3D Pedestal Platform
+                                </label>
+                                <input type="checkbox" id="optPedestalEnabled" checked class="w-4 h-4 text-primary bg-dark border-white/10 rounded focus:ring-primary focus:ring-offset-dark focus:ring-2">
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <span class="text-[10px] text-gray-400 font-medium">Podium Shape</span>
+                                    <select id="optPedestalShape" class="w-full bg-dark/40 border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary">
+                                        <option value="slab" selected>Perspective Rectangle Slab</option>
+                                        <option value="cylinder">Isometric Smooth Cylinder</option>
+                                        <option value="hexagon">Stacked Double Hexagon</option>
+                                    </select>
+                                </div>
+                                <div class="space-y-1">
+                                    <span class="text-[10px] text-gray-400 font-medium">Material Texture</span>
+                                    <select id="optPedestalMaterial" class="w-full bg-dark/40 border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary">
+                                        <option value="gold" selected>Polished Specular Gold</option>
+                                        <option value="marble">White Carrara Slate</option>
+                                        <option value="glass">Frosted Glassmorphic</option>
+                                        <option value="matte">Accents Matte Plaster</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <div class="flex justify-between items-center text-[10px] text-gray-400 font-medium">
+                                        <span>Podium Base Color</span>
+                                        <span id="lblPedestalColor" class="font-mono font-bold text-white">#FFD700</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 bg-dark/30 border border-white/10 rounded-xl px-3 py-1.5 h-10">
+                                        <div class="color-picker-wrapper">
+                                            <input type="color" id="optPedestalColor" value="#FFD700">
+                                        </div>
+                                        <span class="text-xs text-gray-500 font-semibold font-mono">Custom color</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-1">
+                                    <div class="flex justify-between items-center text-[10px] text-gray-400 font-medium">
+                                        <span>Podium Width Scale</span>
+                                        <span id="valPedestalScale" class="text-white font-bold font-mono">100%</span>
+                                    </div>
+                                    <input type="range" id="optPedestalScale" min="50" max="150" value="100">
+                                </div>
+                            </div>
+
+                            <div class="space-y-1">
+                                <div class="flex justify-between items-center text-[10px] text-gray-400 font-medium">
+                                    <span>Podium Vertical position (Y)</span>
+                                    <span id="valPedestalY" class="text-white font-bold font-mono">0px</span>
+                                </div>
+                                <input type="range" id="optPedestalY" min="-100" max="100" value="0">
+                            </div>
+                        </div>
+
+                        <!-- 3. Glowing Studio Halo -->
+                        <div class="space-y-4 pt-4 border-t border-white/5">
+                            <div class="flex items-center justify-between">
+                                <label class="text-xs text-gray-300 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                    <i class="ri-lightbulb-flash-line text-primary"></i> Glowing Halo Accent Light
+                                </label>
+                                <input type="checkbox" id="optHaloEnabled" class="w-4 h-4 text-primary bg-dark border-white/10 rounded focus:ring-primary">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <span class="text-[10px] text-gray-400 font-medium">Halo light style</span>
+                                    <select id="optHaloStyle" class="w-full bg-dark/40 border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary">
+                                        <option value="ring" selected>Concentric Light Rings</option>
+                                        <option value="glow">Soft Volumetric Glow</option>
+                                        <option value="arch">Elegant Classical Arch</option>
+                                    </select>
+                                </div>
+
+                                <div class="space-y-1">
+                                    <div class="flex justify-between items-center text-[10px] text-gray-400 font-medium">
+                                        <span>Halo Light Color</span>
+                                        <span id="lblHaloColor" class="font-mono font-bold text-white">#6366F1</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 bg-dark/30 border border-white/10 rounded-xl px-3 py-1.5 h-10">
+                                        <div class="color-picker-wrapper">
+                                            <input type="color" id="optHaloColor" value="#6366f1">
+                                        </div>
+                                        <span class="text-xs text-gray-500 font-semibold font-mono">Custom color</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <div class="flex justify-between items-center text-[10px] text-gray-400 font-medium">
+                                        <span>Halo Size Radius</span>
+                                        <span id="valHaloSize" class="text-white font-bold font-mono">180px</span>
+                                    </div>
+                                    <input type="range" id="optHaloSize" min="50" max="300" value="180">
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="flex justify-between items-center text-[10px] text-gray-400 font-medium">
+                                        <span>Glow Blur Intensity</span>
+                                        <span id="valHaloGlow" class="text-white font-bold font-mono">30</span>
+                                    </div>
+                                    <input type="range" id="optHaloGlow" min="10" max="100" value="30">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Creative atmosphere parameters -->
+                        <div class="space-y-4 pt-4 border-t border-white/5">
+                            <label class="text-xs text-gray-300 font-bold uppercase tracking-wider block">
+                                <i class="ri-landscape-line text-primary"></i> Depth & Atmosphere
+                            </label>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <div class="flex justify-between items-center text-[10px] text-gray-400 font-medium">
+                                        <span>Backdrop Tint Blend</span>
+                                        <span id="valTintIntensity" class="text-white font-bold font-mono">20%</span>
+                                    </div>
+                                    <input type="range" id="optTintIntensity" min="0" max="100" value="20">
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="flex items-center justify-between text-[10px] text-gray-400 font-medium">
+                                        <span>Ambient Spark Dust</span>
+                                        <input type="checkbox" id="optAmbientDustEnabled" checked class="w-4 h-4 text-primary bg-dark border-white/10 rounded focus:ring-primary">
+                                    </div>
+                                    <span class="text-[10px] text-gray-500 block pt-4">Scattered cinematic studio lighting dust particles</span>
+                                </div>
+                            </div>
+
+                            <!-- Leaf shadows config collapsible -->
+                            <div class="space-y-3 pt-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] text-gray-400 font-bold uppercase">Bokeh Leaf Shadows</span>
+                                    <input type="checkbox" id="optLeafShadowsEnabled" checked class="w-4 h-4 text-primary bg-dark border-white/10 rounded focus:ring-primary">
+                                </div>
+                                <div id="leafShadowsConfigRow" class="space-y-2">
+                                    <span class="text-[10px] text-gray-400 font-medium block">Leaf Shadow Plant Type</span>
+                                    <select id="optLeafShadowsType" class="w-full bg-dark/40 border border-white/10 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-primary">
+                                        <option value="eucalyptus" selected>Polished Eucalyptus Stems</option>
+                                        <option value="palm">Large Tropical Palm Fronds</option>
+                                        <option value="pine">Wild Pine Needle Branches</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Gold veins config collapsible -->
+                            <div class="space-y-3 pt-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[10px] text-gray-400 font-bold uppercase">Gold Foil Flecks</span>
+                                    <input type="checkbox" id="optGoldVeinsEnabled" class="w-4 h-4 text-primary bg-dark border-white/10 rounded focus:ring-primary">
+                                </div>
+                                <div id="goldVeinsConfigRow" class="space-y-1 hidden">
+                                    <div class="flex justify-between items-center text-[10px] text-gray-400 font-medium">
+                                        <span>Veins / Flakes Density</span>
+                                        <span id="valGoldVeinsDensity" class="text-white font-bold font-mono">30%</span>
+                                    </div>
+                                    <input type="range" id="optGoldVeinsDensity" min="10" max="100" value="30">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 5. Product position offsets -->
+                        <div class="space-y-4 pt-4 border-t border-white/5">
+                            <label class="text-xs text-gray-300 font-bold uppercase tracking-wider block">
+                                <i class="ri-drag-move-line text-primary"></i> Product Geometry & Shadows
+                            </label>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <div class="flex justify-between items-center text-[10px] text-gray-400 font-medium">
+                                        <span>Product Scale Factor</span>
+                                        <span id="valProductScale" class="text-white font-bold font-mono">55%</span>
+                                    </div>
+                                    <input type="range" id="optProductScale" min="20" max="120" value="55">
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="flex justify-between items-center text-[10px] text-gray-400 font-medium">
+                                        <span>Contact Shadow Depth</span>
+                                        <span id="valContactShadowOpacity" class="text-white font-bold font-mono">75%</span>
+                                    </div>
+                                    <input type="range" id="optContactShadowOpacity" min="0" max="100" value="75">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <div class="flex justify-between items-center text-[10px] text-gray-400 font-medium">
+                                        <span>Horizontal Offset (X)</span>
+                                        <span id="valProductX" class="text-white font-bold font-mono">0px</span>
+                                    </div>
+                                    <input type="range" id="optProductX" min="-200" max="200" value="0">
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="flex justify-between items-center text-[10px] text-gray-400 font-medium">
+                                        <span>Vertical Offset (Y)</span>
+                                        <span id="valProductY" class="text-white font-bold font-mono">0px</span>
+                                    </div>
+                                    <input type="range" id="optProductY" min="-200" max="200" value="0">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div class="space-y-1">
+                                    <div class="flex justify-between items-center text-[10px] text-gray-400 font-medium">
+                                        <span>Cast Shadow Strength</span>
+                                        <span id="valCastShadowStrength" class="text-white font-bold font-mono">55%</span>
+                                    </div>
+                                    <input type="range" id="optCastShadowStrength" min="0" max="100" value="55">
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="flex justify-between items-center text-[10px] text-gray-400 font-medium">
+                                        <span>Light Angle</span>
+                                        <span id="valCastShadowAngle" class="text-white font-bold font-mono">15°</span>
+                                    </div>
+                                    <input type="range" id="optCastShadowAngle" min="-90" max="90" value="15">
+                                </div>
+                                <div class="space-y-1">
+                                    <div class="flex justify-between items-center text-[10px] text-gray-400 font-medium">
+                                        <span>Shadow Blur</span>
+                                        <span id="valCastShadowBlur" class="text-white font-bold font-mono">30px</span>
+                                    </div>
+                                    <input type="range" id="optCastShadowBlur" min="5" max="80" value="30">
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 3: INGREDIENT SCAN & HEALTH HUB -->
+        <!-- ============================================== -->
+        <div id="tab-ingredient" class="tab-content space-y-8">
+            
+            <div class="glass-panel p-6 rounded-3xl relative overflow-hidden">
+                <div class="space-y-1">
+                    <h2 class="text-xl font-display font-semibold flex items-center gap-2">
+                        <i class="ri-heart-pulse-line text-primary"></i> AI Ingredient Scan & Analysis
+                    </h2>
+                    <p class="text-xs text-gray-400">Scan packaging labels or search the database to analyze allergens, identify harmful chemical additives, and check vegan/gluten criteria.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Left Panel: Input scanner -->
+                <div class="lg:col-span-5 space-y-6">
+                    
+                    <!-- OpenFoodFacts DB Search Bar -->
+                    <div class="glass-panel p-6 rounded-3xl space-y-4">
+                        <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+                            <i class="ri-search-line text-primary"></i> OpenFoodFacts Database Search
+                        </h3>
+                        <div class="flex gap-2">
+                            <input type="text" id="offSearchQuery" placeholder="Enter barcode or product name..." class="flex-1 bg-dark/40 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary">
+                            <button onclick="searchOpenFoodFacts()" class="px-4 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/80 transition-colors flex items-center justify-center">
+                                <i class="ri-search-eye-line text-lg"></i>
+                            </button>
+                        </div>
+                        <span class="text-[10px] text-gray-500 block">Queries the OpenFoodFacts API to pull official ingredient data instantly.</span>
+                    </div>
+
+                    <!-- OCR Upload Zone -->
+                    <div class="glass-panel p-6 rounded-3xl space-y-6">
+                        
+                        <div class="space-y-2">
+                            <h3 class="text-sm font-semibold text-white flex items-center gap-2">
+                                <i class="ri-scan-2-line text-primary"></i> Scan Ingredient Photo
+                            </h3>
+                            <div onclick="document.getElementById('ingredientFileInput').click()" class="border-2 border-dashed border-white/10 rounded-2xl p-6 text-center hover:border-primary/50 cursor-pointer hover:bg-white/5 transition-all">
+                                <input type="file" id="ingredientFileInput" accept="image/*" class="hidden">
+                                <i class="ri-camera-lens-line text-3xl text-gray-400 mb-2 block"></i>
+                                <span class="text-xs text-gray-300 font-semibold block" id="uploadIngredientText">Upload Packaging Snapshot</span>
+                                <span class="text-[10px] text-gray-500 mt-1 block">Tesseract AI will extract the raw text blocks</span>
+                            </div>
+                        </div>
+
+                        <!-- Manual Text Area fallback -->
+                        <div class="space-y-2 pt-4 border-t border-white/5">
+                            <label class="text-xs font-semibold text-gray-400 block">Or Paste Ingredient Text</label>
+                            <textarea id="ingredientsListText" rows="5" placeholder="Pasted ingredients list here... (e.g. Whole grain oats, sugar, milk chocolate, high fructose corn syrup, sodium benzoate, red 40...)" class="w-full bg-dark/40 border border-white/10 rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"></textarea>
+                        </div>
+
+                        <button onclick="analyzeIngredients()" class="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-bold hover:shadow-[0_0_20px_rgba(99,102,241,0.3)] transition-all flex items-center justify-center gap-2">
+                            <i class="ri-microscope-line text-lg"></i> Run Chemical Analysis
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Results Hub dashboard -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="glass-panel p-6 rounded-3xl" id="ingredientsEmptyState">
+                        <div class="flex flex-col items-center justify-center py-20 text-center space-y-4">
+                            <div class="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400">
+                                <i class="ri-bubble-chart-line text-3xl"></i>
+                            </div>
+                            <div class="max-w-sm space-y-1">
+                                <h3 class="text-base font-semibold">Ready for Lab Analysis</h3>
+                                <p class="text-xs text-gray-500">Upload an ingredient label photo, search OpenFoodFacts database, or type raw text on the left to start the analysis.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ingredient Dashboard Container -->
+                    <div class="glass-panel p-6 rounded-3xl space-y-6 hidden" id="ingredientsDashboard">
+                        
+                        <!-- Top Header: Title, Health Score circular gauge, Diet badges -->
+                        <div class="flex flex-col sm:flex-row items-center justify-between gap-6 pb-6 border-b border-white/5">
+                            
+                            <!-- Health score circle chart -->
+                            <div class="w-36 flex flex-col items-center text-center">
+                                <span class="text-xs text-gray-400 font-semibold mb-1 block">Chemical Health Rating</span>
+                                <div class="relative w-28 h-28">
+                                    <svg viewBox="0 0 36 36" class="circular-chart">
+                                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                        <path id="healthScoreGauge" class="circle circle-a" stroke-dasharray="85, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    </svg>
+                                    <div class="absolute inset-0 flex flex-col items-center justify-center leading-none mt-1">
+                                        <span class="text-3xl font-black font-display text-green-400" id="healthLetterScore">A</span>
+                                        <span class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5" id="healthNumericalScore">85/100</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Diet badges grid -->
+                            <div class="flex-1 space-y-4 w-full">
+                                <div class="space-y-1">
+                                    <h3 class="text-base font-semibold font-display" id="ingredientScannedTitle">Analyzed Product</h3>
+                                    <p class="text-xs text-gray-400">Dietary compatibility checker</p>
+                                </div>
+                                <div class="flex flex-wrap gap-2" id="dietBadgesWrapper">
+                                    <!-- Badges injected dynamically by JS -->
+                                    <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-400 border border-green-500/20 text-xs font-semibold flex items-center gap-1"><i class="ri-leaf-line"></i> Vegan</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Highlights Section: Allergens, Preservatives, Additives -->
+                        <div class="space-y-4">
+                            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Chemical Scan Report</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Allergens -->
+                                <div class="p-4 rounded-2xl bg-orange-500/5 border border-orange-500/10 space-y-2">
+                                    <div class="flex justify-between items-center text-orange-400 text-xs font-bold uppercase">
+                                        <span>Allergens Detected</span>
+                                        <i class="ri-alert-line"></i>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1.5" id="allergensListWrapper">
+                                        <!-- Items -->
+                                    </div>
+                                </div>
+                                
+                                <!-- Preservatives -->
+                                <div class="p-4 rounded-2xl bg-red-500/5 border border-red-500/10 space-y-2">
+                                    <div class="flex justify-between items-center text-red-400 text-xs font-bold uppercase">
+                                        <span>Chemical Preservatives</span>
+                                        <i class="ri-shield-flash-line"></i>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1.5" id="preservativesListWrapper">
+                                        <!-- Items -->
+                                    </div>
+                                </div>
+
+                                <!-- Additives & Artificial colors -->
+                                <div class="p-4 rounded-2xl bg-yellow-500/5 border border-yellow-500/10 space-y-2">
+                                    <div class="flex justify-between items-center text-yellow-400 text-xs font-bold uppercase">
+                                        <span>Suspicious Dyes / Additives</span>
+                                        <i class="ri-contrast-drop-line"></i>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1.5" id="additivesListWrapper">
+                                        <!-- Items -->
+                                    </div>
+                                </div>
+
+                                <!-- Healthy features -->
+                                <div class="p-4 rounded-2xl bg-green-500/5 border border-green-500/10 space-y-2">
+                                    <div class="flex justify-between items-center text-green-400 text-xs font-bold uppercase">
+                                        <span>Nutritious Superfoods</span>
+                                        <i class="ri-seedling-line"></i>
+                                    </div>
+                                    <div class="flex flex-wrap gap-1.5" id="healthyListWrapper">
+                                        <!-- Items -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cleaned Digital Ingredient Card -->
+                        <div class="space-y-2 pt-4 border-t border-white/5">
+                            <div class="flex justify-between items-center">
+                                <label class="text-xs font-semibold text-gray-400 uppercase tracking-widest">Clean Ingredient Statement</label>
+                                <button onclick="copyCleanIngredients()" class="text-xs text-primary font-bold hover:underline flex items-center gap-1">
+                                    <i class="ri-file-copy-line"></i> Copy Text
+                                </button>
+                            </div>
+                            <div id="cleanIngredientsPanel" class="w-full bg-black/35 rounded-2xl p-4 border border-white/5 text-xs text-gray-300 leading-relaxed font-mono">
+                                <!-- Cleaned statement goes here -->
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TAB 4: CLOUD SYNC & PROJECTS DATABASE -->
+        <!-- ============================================== -->
+        <div id="tab-history" class="tab-content space-y-8">
+            
+            <div class="glass-panel p-6 rounded-3xl relative overflow-hidden flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <h2 class="text-xl font-display font-semibold flex items-center gap-2">
+                        <i class="ri-database-2-line text-primary"></i> Saved Project Library
+                    </h2>
+                    <p class="text-xs text-gray-400">Access, edit, share, or manage your stored nutrition labels and packaging composites.</p>
+                </div>
+                <button onclick="toggleFirebaseConfigModal()" class="px-4 py-2.5 rounded-xl border border-primary/20 bg-primary/10 text-primary text-xs font-bold hover:bg-primary/20 transition-all flex items-center gap-2">
+                    <i class="ri-settings-4-line"></i> Cloud Sync Settings
+                </button>
+            </div>
+
+            <!-- Library Grid -->
+            <div id="historyGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Injected dynamically by JS -->
+            </div>
+            
+            <div id="historyEmptyState" class="glass-panel p-20 rounded-3xl text-center flex flex-col items-center justify-center space-y-4 hidden">
+                <div class="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-400">
+                    <i class="ri-archive-line text-3xl"></i>
+                </div>
+                <div class="max-w-sm space-y-1">
+                    <h3 class="text-base font-semibold">Your Library is Empty</h3>
+                    <p class="text-xs text-gray-500">Go to the AI Label Builder tab, design a custom label, and hit "Save Project" to store it in your catalog.</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Visual Footer -->
+    <footer class="border-t border-white/5 bg-dark/90 backdrop-blur-md py-12 relative z-50">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-sm font-bold">
+                    <i class="ri-sparkling-fill"></i>
+                </div>
+                <span class="font-display font-bold text-lg">NutriForgeAI</span>
+            </div>
+            <div class="text-xs text-gray-600">
+                &copy; 2026 NutriForge AI Studio. Premium Brand Composite and FDA Nutrition Fact Engine. 100% Free APIs.
+            </div>
+            <div class="flex gap-4">
+                <a href="#" class="text-gray-500 hover:text-white transition-colors"><i class="ri-twitter-x-line"></i></a>
+                <a href="#" class="text-gray-500 hover:text-white transition-colors"><i class="ri-github-line"></i></a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ============================================== -->
+    <!-- MODAL 1: INTERACTIVE OCR SCANNING SUITE -->
+    <!-- ============================================== -->
+    <div id="ocrModalOverlay" class="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay">
+        <div class="relative max-w-4xl w-full glass-panel border border-white/20 rounded-[2rem] overflow-hidden shadow-[0_0_80px_rgba(99,102,241,0.2)] flex flex-col md:flex-row h-[85vh] modal-card">
+            
+            <!-- Left: Laser Image Preview -->
+            <div class="md:w-1/2 h-full bg-black/50 relative flex items-center justify-center overflow-hidden border-r border-white/5">
+                <div id="ocrDropzone" onclick="document.getElementById('ocrFileInput').click()" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center cursor-pointer hover:bg-white/5 transition-colors z-10">
+                    <i class="ri-camera-3-line text-4xl text-gray-500 mb-2"></i>
+                    <p class="text-sm font-semibold">Drag & Drop Nutrition Label Image</p>
+                    <p class="text-[10px] text-gray-500 mt-1">Or click to select from your files</p>
+                </div>
+                
+                <img id="ocrPreviewImage" src="" alt="OCR Preview" class="max-w-full max-h-full object-contain opacity-0 transition-all duration-500 scale-95 z-20">
+                <div id="ocrLaserLine" class="scanning-laser hidden"></div>
+                <input type="file" id="ocrFileInput" accept="image/*" class="hidden">
+            </div>
+            
+            <!-- Right: Real-time Terminal Log Console -->
+            <div class="md:w-1/2 p-8 flex flex-col justify-between h-full bg-dark/40 relative z-30">
+                <div class="space-y-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary">
+                            <i class="ri-radar-line text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-display font-bold">AI Nutrition Label OCR</h3>
+                            <p class="text-[10px] text-gray-400">NutriForge Pipeline v4.0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2 text-xs font-semibold" id="ocrStatusBadge">
+                            <span class="w-2.5 h-2.5 rounded-full bg-gray-500" id="ocrStatusDot"></span>
+                            <span id="ocrStatusText">Waiting for image...</span>
+                        </div>
+                        
+                        <!-- Terminal Emulator -->
+                        <div id="ocrTerminal" class="w-full h-52 bg-black/60 border border-white/5 rounded-2xl p-4 font-mono text-[10px] text-gray-400 overflow-y-auto custom-scrollbar leading-relaxed">
+                            <div class="text-primary/60 mb-1">>> NutriForge Engine online. awaiting input...</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col gap-3 pt-6 border-t border-white/5">
+                    <div class="flex items-center justify-between text-[10px] text-gray-500 px-1">
+                        <span>Confidence threshold: 85%</span>
+                        <span id="ocrScoreLabel">Average Confidence: -</span>
+                    </div>
+                    
+                    <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                        <div id="ocrProgressBar" class="h-full bg-gradient-to-r from-primary to-secondary w-0 transition-all duration-300"></div>
+                    </div>
+                    
+                    <div class="flex justify-between items-center mt-2">
+                        <button onclick="closeOcrScannerModal()" class="text-xs text-gray-400 hover:text-white transition-colors">Cancel Scan</button>
+                        <button id="btnOcrConfirm" onclick="confirmOcrExtraction()" class="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary/80 transition-all opacity-50 cursor-not-allowed" disabled>
+                            Confirm & Populate UI
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Close Button -->
+            <button onclick="closeOcrScannerModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-all z-50">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- MODAL 2: CLOUD DB / FIREBASE CONFIG MODAL -->
+    <!-- ============================================== -->
+    <div id="firebaseConfigModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 modal-overlay">
+        <div class="relative max-w-lg w-full glass-panel border border-white/20 rounded-[2rem] p-8 shadow-[0_0_80px_rgba(99,102,241,0.25)] bg-dark/95 modal-card">
+            
+            <div class="flex justify-between items-start mb-6">
+                <div class="space-y-1">
+                    <h3 class="text-lg font-display font-bold">Cloud Sync Configuration</h3>
+                    <p class="text-xs text-gray-400">Connect to your Firebase Firestore database instance for direct SaaS catalog persistence.</p>
+                </div>
+                <button onclick="toggleFirebaseConfigModal()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                    <i class="ri-close-line text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Form -->
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-gray-400 uppercase tracking-widest">Firebase API Key</label>
+                        <input type="password" id="fbApiKey" placeholder="AIzaSy..." class="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-gray-400 uppercase tracking-widest">Auth Domain</label>
+                        <input type="text" id="fbAuthDomain" placeholder="myproject.firebaseapp.com" class="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary">
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-[10px] text-gray-400 uppercase tracking-widest">Project ID</label>
+                    <input type="text" id="fbProjectId" placeholder="myproject-12345" class="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-gray-400 uppercase tracking-widest">Storage Bucket</label>
+                        <input type="text" id="fbStorageBucket" placeholder="myproject.appspot.com" class="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] text-gray-400 uppercase tracking-widest">App ID</label>
+                        <input type="text" id="fbAppId" placeholder="1:12345:web:1234" class="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-primary">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-3 mt-8">
+                <button onclick="clearFirebaseConfiguration()" class="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-semibold hover:bg-white/10 transition-colors">
+                    Reset & Local MockDB
+                </button>
+                <button onclick="saveFirebaseConfiguration()" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white text-xs font-bold hover:shadow-[0_0_20px_rgba(99,102,241,0.3)] transition-all">
+                    Initialize Firebase
+                </button>
+            </div>
+            
+            <div class="bg-primary/5 border border-primary/20 rounded-xl p-3.5 mt-5 flex gap-2">
+                <i class="ri-information-line text-primary text-lg"></i>
+                <p class="text-[10px] text-gray-400 leading-normal">
+                    <strong>Zero Setup Required:</strong> If left blank, NutriForge automatically runs on our browser-native **MockDB**, saving labels directly to your browser's local cache with full offline functionality.
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Hidden High-Res Export Canvas Elements -->
+    <canvas id="exportBufferCanvas" class="hidden"></canvas>
+
+    <!-- Include Firebase core libraries from CDN -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- Core Script Studio -->
+    <script src="script.js"></script>
+</body>
+</html>
